@@ -208,6 +208,28 @@ class AdminController extends BaseController
         return redirect()->to('/admin/employes');
     }
 
+    public function employeSupprimer($id)
+    {
+        $db = \Config\Database::connect();
+
+        // Empêche l'admin connecté de supprimer son propre compte.
+        if ((int) $id === (int) session()->get('user_id')) {
+            session()->setFlashdata('error', 'Suppression impossible: vous ne pouvez pas supprimer votre propre compte.');
+            return redirect()->to('/admin/employes');
+        }
+
+        $employe = $db->table('employes')->where('id', $id)->get()->getRowArray();
+        if (!$employe) {
+            session()->setFlashdata('error', 'Employé introuvable.');
+            return redirect()->to('/admin/employes');
+        }
+
+        $db->table('employes')->where('id', $id)->delete();
+
+        session()->setFlashdata('success', 'Employé supprimé.');
+        return redirect()->to('/admin/employes');
+    }
+
     // -------------------------------------------------------
     // Départements
     // -------------------------------------------------------

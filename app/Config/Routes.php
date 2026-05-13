@@ -37,6 +37,7 @@ $routes->group('admin',  function($routes) {
     $routes->get('employes/edit/(:num)',        'AdminController::employeEdit/$1');
     $routes->post('employes/edit/(:num)',       'AdminController::employeUpdate/$1');
     $routes->post('employes/desactiver/(:num)', 'AdminController::employeDesactiver/$1');
+    $routes->post('employes/supprimer/(:num)',  'AdminController::employeSupprimer/$1');
     $routes->get('departements',                'AdminController::departements');
     $routes->post('departements/new',           'AdminController::departementStore');
     $routes->get('types-conge',                 'AdminController::typesConge');

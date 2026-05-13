@@ -31,6 +31,10 @@
                             <?= csrf_field() ?>
                             <button class="btn-sm btn-del" type="submit">Désactiver</button>
                         </form>
+                        <form method="post" action="/admin/employes/supprimer/<?= $e['id'] ?>" style="display:inline" onsubmit="return confirm('Supprimer définitivement cet employé ? Cette action est irréversible.')">
+                            <?= csrf_field() ?>
+                            <button class="btn-sm btn-refuse" type="submit">Supprimer</button>
+                        </form>
                     </td>
                 </tr>
                 <?php endforeach; ?>
