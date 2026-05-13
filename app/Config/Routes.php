@@ -28,3 +28,12 @@ $routes->group('rh', ['filter' => 'auth:rh'], function($routes) {
     $routes->post('demandes/approuver/(:num)',   'RhController::approuver/$1');
     $routes->post('demandes/refuser/(:num)',      'RhController::refuser/$1');
 });
+
+// Admin
+$routes->group('admin', ['filter' => 'auth:admin'], function($routes) {
+    $routes->get('dashboard',                    'AdminController::dashboard');
+    $routes->get('employes',                     'AdminController::employes');
+    $routes->get('departements',                 'AdminController::departements');
+    $routes->get('types-conge',                  'AdminController::typesConge');
+    $routes->get('soldes',                       'AdminController::soldes');
+});

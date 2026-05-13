@@ -32,7 +32,7 @@ class AdminController extends BaseController
 
         // Absents aujourd'hui (congés approuvés qui couvrent aujourd'hui)
         $absentsAujourdhui = $db->table('conges c')
-            ->select('e.nom, e.prenom, tc.nom as type_conge, c.date_fin')
+            ->select('e.nom, e.prenom, tc.libelle as type_conge, c.date_fin')
             ->join('employes e', 'e.id = c.employe_id')
             ->join('types_conge tc', 'tc.id = c.type_conge_id')
             ->where('c.statut', 'approuvee')
@@ -44,10 +44,10 @@ class AdminController extends BaseController
 
         // Dernières demandes (5 plus récentes)
         $demandesRecentes = $db->table('conges c')
-            ->select('c.*, e.nom, e.prenom, tc.nom as type_conge')
+            ->select('c.*, e.nom, e.prenom, tc.libelle as type_conge')
             ->join('employes e', 'e.id = c.employe_id')
             ->join('types_conge tc', 'tc.id = c.type_conge_id')
-            ->orderBy('c.created_at', 'DESC')
+            ->orderBy('c.id', 'DESC')
             ->limit(5)
             ->get()->getResultArray();
 
@@ -59,7 +59,7 @@ class AdminController extends BaseController
 
         // Congés par type ce mois
         $congesParType = $db->table('conges c')
-            ->select('tc.nom as type_conge, COUNT(*) as nb')
+            ->select('tc.libelle as type_conge, COUNT(*) as nb')
             ->join('types_conge tc', 'tc.id = c.type_conge_id')
             ->like('c.date_debut', $mois, 'after')
             ->groupBy('tc.id')
@@ -75,6 +75,61 @@ class AdminController extends BaseController
             'demandesRecentes'    => $demandesRecentes,
             'nbSoldesCritiques'   => $nbSoldesCritiques,
             'congesParType'       => $congesParType,
+        ]);
+    }
+
+    public function employes()
+    {
+        $db = \Config\Database::connect();
+        $employes = $db->table('employes e')
+            ->select('e.*, d.nom as departement')
+            ->join('departements d', 'd.id = e.departement_id', 'left')
+            ->orderBy('e.nom', 'ASC')
+            ->get()->getResultArray();
+
+        return view('admin/employes', [
+            'employes' => $employes,
+        ]);
+    }
+
+    public function departements()
+    {
+        $db = \Config\Database::connect();
+        $departements = $db->table('departements')
+            ->orderBy('nom', 'ASC')
+            ->get()->getResultArray();
+
+        return view('admin/departements', [
+            'departements' => $departements,
+        ]);
+    }
+
+    public function typesConge()
+    {
+        $db = \Config\Database::connect();
+        $types = $db->table('types_conge')
+            ->orderBy('libelle', 'ASC')
+            ->get()->getResultArray();
+
+        return view('admin/types-conge', [
+            'types' => $types,
+        ]);
+    }
+
+    public function soldes()
+    {
+        $db = \Config\Database::connect();
+        $annee = date('Y');
+        $soldes = $db->table('soldes s')
+            ->select('s.*, e.nom, e.prenom, tc.libelle as type_conge')
+            ->join('employes e', 'e.id = s.employe_id', 'left')
+            ->join('types_conge tc', 'tc.id = s.type_conge_id', 'left')
+            ->where('s.annee', $annee)
+            ->orderBy('e.nom', 'ASC')
+            ->get()->getResultArray();
+
+        return view('admin/soldes', [
+            'soldes' => $soldes,
         ]);
     }
 }

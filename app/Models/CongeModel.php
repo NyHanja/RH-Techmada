@@ -19,16 +19,12 @@ class CongeModel extends Model
         'type_conge_id',
         'date_debut',
         'date_fin',
+        'nb_jours',
         'motif',
         'statut',
-        'created_at',
-        'updated_at',
     ];
 
-    protected $useTimestamps = true;
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
-    protected $dateFormat    = 'datetime';
+    protected $useTimestamps = false;
 
     protected $validationRules = [
         'employe_id'     => 'required|numeric',
@@ -47,10 +43,10 @@ class CongeModel extends Model
      */
     public function getMesDemandes($employe_id)
     {
-        return $this->select('conges.*, types_conge.nom as type_nom')
+        return $this->select('conges.*, types_conge.libelle as type_nom')
                     ->join('types_conge', 'types_conge.id = conges.type_conge_id', 'left')
                     ->where('conges.employe_id', $employe_id)
-                    ->orderBy('conges.created_at', 'DESC')
+                    ->orderBy('conges.id', 'DESC')
                     ->findAll();
     }
 
@@ -59,11 +55,11 @@ class CongeModel extends Model
      */
     public function getDemandesEnAttente()
     {
-        return $this->select('conges.*, employes.nom, employes.prenom, types_conge.nom as type_nom')
+        return $this->select('conges.*, employes.nom, employes.prenom, types_conge.libelle as type_nom')
                     ->join('employes', 'employes.id = conges.employe_id', 'left')
                     ->join('types_conge', 'types_conge.id = conges.type_conge_id', 'left')
                     ->where('conges.statut', 'en_attente')
-                    ->orderBy('conges.created_at', 'ASC')
+                    ->orderBy('conges.id', 'ASC')
                     ->findAll();
     }
 
@@ -72,7 +68,7 @@ class CongeModel extends Model
      */
     public function getDemandeWithDetails($id)
     {
-        return $this->select('conges.*, employes.nom, employes.prenom, types_conge.nom as type_nom')
+        return $this->select('conges.*, employes.nom, employes.prenom, types_conge.libelle as type_nom')
                     ->join('employes', 'employes.id = conges.employe_id', 'left')
                     ->join('types_conge', 'types_conge.id = conges.type_conge_id', 'left')
                     ->where('conges.id', $id)

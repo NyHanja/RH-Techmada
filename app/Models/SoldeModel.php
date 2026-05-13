@@ -17,14 +17,9 @@ class SoldeModel extends Model{
         'annee',         // L'annee du solde
         'jours_attribues',  // Total jours accordes
         'jours_pris',    // Jours utilises
-        'created_at',
-        'updated_at',
     ];
 
-    protected $useTimestamps = true;
-    protected $createdField  = 'created_at';
-    protected $updatedField  = 'updated_at';
-    protected $dateFormat    = 'datetime';
+    protected $useTimestamps = false;
 
     protected $validationRules = [
         'employe_id'      => 'required|numeric',
@@ -44,7 +39,7 @@ class SoldeModel extends Model{
     }
 
     public function getSoldesEmploye($employe_id, $annee){
-        return $this->select('soldes.*, types_conge.nom as type_conge_nom')
+        return $this->select('soldes.*, types_conge.libelle as type_nom')
                     ->join('types_conge', 'types_conge.id = soldes.type_conge_id', 'left')
                     ->where('soldes.employe_id', $employe_id)
                     ->where('soldes.annee', $annee)

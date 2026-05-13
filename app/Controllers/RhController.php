@@ -92,7 +92,7 @@ class RhController extends BaseController
         }
 
         $db->table('conges')->where('id', $id)->update([
-            'statut' => 'approuve',
+            'statut' => 'approuvee',
             'traite_par' => session()->get('user_id')
         ]);
        
@@ -118,7 +118,7 @@ class RhController extends BaseController
         $commentaire = $this->request->getPost('commentaire_rh');
 
         $db->table('conges')->where('id', $id)->update([
-            'statut' => 'refuse',
+            'statut' => 'refusee',
             'traite_par' => session()->get('user_id'),
             'commentaire_rh' => $commentaire
         ]);

@@ -119,6 +119,7 @@ class EmployeController extends BaseController
             'type_conge_id' => $type_conge_id,
             'date_debut' => $date_debut,
             'date_fin' => $date_fin,
+            'nb_jours' => $nb_jours,
             'motif' => $motif,
         ]);
 

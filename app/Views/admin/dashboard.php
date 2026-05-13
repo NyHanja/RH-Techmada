@@ -1,23 +1,5 @@
 <?= $this->extend('layout/app') ?>
 
-<?= $this->section('content') ?>
-
-<?= $this->section('page_title') ?>
-    Vue d'ensemble  // ← le titre dans la topbar
-<?= $this->endSection() ?>
-
-<?= $this->section('breadcrumb') ?>
-    Administration  // ← le fil d'ariane
-<?= $this->endSection() ?>
-
-<?= $this->section('topbar_actions') ?>
-    // ← boutons en haut à droite (optionnel)
-<?= $this->endSection() ?>
-
-<?= $this->section('content') ?>
-    // ← ton contenu principal
-<?= $this->endSection() ?>
-
 <?= $this->section('page_title') ?>Vue d'ensemble<?= $this->endSection() ?>
 
 <?= $this->section('breadcrumb') ?>Administration<?= $this->endSection() ?>
@@ -27,6 +9,8 @@
     <i class="bi bi-person-plus"></i> Ajouter un employé
 </a>
 <?= $this->endSection() ?>
+
+<?= $this->section('content') ?>
 
 <!-- Métriques -->
 <div class="metrics">
