@@ -1,0 +1,450 @@
+
+              SYSTEME DE GESTION DES CONGES - RH TECHMADA
+                        TODO LIST COMPLETE
+
+
+PROJET: Application web de gestion des conges avec CodeIgniter 4 et SQLite3
+STATUT: En cours de developpement
+DATE: 13 mai 2026
+
+
+PHASE 1 : CONFIGURATION ET SETUP
+
+
+[OK] Configurer SQLite3 dans Database.php
+  - Utiliser WRITEPATH . 'data.db'
+  - Retirer le port 3306 (specifique MySQL)
+  
+[OK] Creer les fichiers de configuration
+  - Routes.php avec groupes de roles (employe, rh, admin)
+  - AuthFilter.php pour controle d'acces base sur les roles
+  - Services.php (inclure AuthFilter dans le service)
+
+[OK] Initialiser le repertoire writable
+  - Creer /writable/cache/ avec permissions 775
+  - Assurer les permissions sur /logs/, /session/, /uploads/
+
+
+PHASE 2 : AUTHENTIFICATION
+
+
+[OK] AuthController
+  - login() -> Afficher le formulaire de connexion
+  - loginPost() -> Valider les credentials, creer la session
+  - logout() -> Detruire la session, rediriger vers /login
+
+[OK] Views/auth/login.php
+  - Formulaire avec email et password
+  - Styling coherent avec la charte graphique
+
+[OK] Filtrage par role
+  - Les employes vont sur /employe/dashboard
+  - Les RH vont sur /rh/dashboard
+  - Les admins vont sur /admin/dashboard
+
+
+PHASE 3 : MODELES DE DONNEES
+
+
+[OK] EmployeModel
+  - findByEmail($email) -> Recuperer par email pour le login
+  - createEmploye($data) -> Creer avec password hache
+  - getEmployeWithDepartement($id) -> Join avec departement
+  - changePassword($id, $new_pass) -> Mettre a jour le mot de passe
+
+[OK] CongeModel
+  - getMesDemandes($employe_id) -> Toutes les demandes de cet employe
+  - getDemandesEnAttente() -> Pour le RH
+  - getDemandeWithDetails($id) -> Details complets avec joins
+  - hasChevauchement($employe_id, date_debut, date_fin) -> Verifier les conflits
+  - createDemande($data) -> Creer avec statut='en_attente'
+  - approuver($id) -> Passer a 'approuvee'
+  - refuser($id) -> Passer a 'refusee'
+  - annuler($id) -> Passer a 'annulee'
+  - calculerNombreJours($debut, $fin) -> Jours entre deux dates + 1
+
+[OK] SoldeModel
+  - getSolde($employe_id, $type_conge_id, $annee) -> Solde trouve
+  - getSoldesEmploye($employe_id, $annee) -> Tous les soldes pour un employe
+  - deduire($employe_id, $type_conge_id, $annee, $jours) -> Ajouter les jours_pris
+  - restituer($employe_id, $type_conge_id, $annee, $jours) -> Retirer les jours_pris
+  - getJoursRestants($employe_id, $type_conge_id, $annee) -> Calcul des restants
+
+[OK] Corrections appliquees
+  - Desactiver useTimestamps dans CongeModel et SoldeModel
+  - Changer types_conge.nom -> types_conge.libelle partout
+  - Changer orderBy('created_at') -> orderBy('id')
+  - Ajouter 'nb_jours' a allowedFields et aux INSERT
+
+
+PHASE 4 : CONTROLEURS EMPLOYE
+
+
+[OK] EmployeController
+  - dashboard() -> Afficher les soldes de conge pour l'annee courante
+  - index() -> Lister les demandes de conge
+  - create() -> Afficher le formulaire de nouvelle demande
+  - store() -> Creer une demande avec validations:
+    * Dates valides
+    * Date debut < date fin
+    * Pas de chevauchement
+    * Solde suffisant
+  - annuler($id) -> Annuler une demande "en_attente"
+  - profil() -> Afficher le profil de l'employe
+  - profilUpdate() -> Mettre a jour nom, prenom, password
+
+[OK] Routes employe
+  - GET /employe/dashboard -> dashboard()
+  - GET /employe/demandes -> index()
+  - GET /employe/demandes/new -> create()
+  - POST /employe/demandes/new -> store()
+  - POST /employe/demandes/annuler/:id -> annuler()
+  - GET /employe/profil -> profil()
+  - POST /employe/profil -> profilUpdate()
+
+
+PHASE 5 : CONTROLEURS RH
+
+
+[OK] RhController
+  - dashboard() -> Afficher metriques:
+    * Nombre de demandes en attente
+    * Demandes par departement
+    * Soldes par employe pour l'annee courante
+  - index() -> Lister les demandes:
+    * Filtre par departement
+    * Filtre par statut (defaut: en_attente)
+  - approuver($id) -> Verifier le solde, mettre a 'approuvee', MAJ jours_pris
+  - refuser($id) -> Mettre a 'refusee' avec commentaire optionnel
+
+[OK] Routes RH
+  - GET /rh/dashboard -> dashboard()
+  - GET /rh/demandes -> index()
+  - POST /rh/demandes/approuver/:id -> approuver()
+  - POST /rh/demandes/refuser/:id -> refuser()
+
+[OK] Corrections appliquees
+  - Changer 'approuve' -> 'approuvee'
+  - Changer 'refuse' -> 'refusee'
+  - Changer 'tc.nom' -> 'tc.libelle'
+
+
+PHASE 6 : CONTROLEURS ADMIN
+
+
+[OK] AdminController
+  - dashboard() -> Metriques globales:
+    * Employes actifs
+    * Demandes en attente
+    * Approuvees ce mois
+    * Departements
+    * Absents aujourd'hui
+    * Soldes critiques (<=2 jours)
+    * Conges par type ce mois
+    * Dernieres demandes (5 plus recentes)
+  - employes() -> Lister tous les employes
+  - createEmploye() -> Formulaire d'ajout
+  - storeEmploye() -> Inserer nouvel employe avec validation
+  - editEmploye($id) -> Formulaire d'edition
+  - updateEmploye($id) -> Mettre a jour employe
+  - deactivateEmploye($id) -> Basculer actif/inactif
+  - departements() -> Lister departements
+  - typesConge() -> Lister types de conge
+  - soldes() -> Lister soldes pour l'annee courante
+
+[OK] Routes admin
+  - GET /admin/dashboard -> dashboard()
+  - GET /admin/employes -> employes()
+  - GET /admin/employes/new -> createEmploye()
+  - POST /admin/employes -> storeEmploye()
+  - GET /admin/employes/:id/edit -> editEmploye()
+  - POST /admin/employes/:id -> updateEmploye()
+  - POST /admin/employes/:id/deactivate -> deactivateEmploye()
+  - GET /admin/departements -> departements()
+  - GET /admin/types-conge -> typesConge()
+  - GET /admin/soldes -> soldes()
+
+[OK] Corrections appliquees
+  - Changer first() -> get()->getRowArray() pour SQLite
+  - Changer 'tc.nom' -> 'tc.libelle'
+  - Changer 'c.created_at' -> 'c.id' (timestamps desactives)
+
+
+PHASE 7 : VUES EMPLOYE
+
+
+[OK] Views/employe/dashboard.php
+  - Afficher les soldes de conge sous forme de cartes
+  - Barre de progression pour les jours utilises
+
+[OK] Views/employe/index.php
+  - Tableau des demandes avec type, dates, statut
+  - Bouton "Annuler" seulement si statut='en_attente'
+
+[OK] Views/employe/create.php
+  - Formulaire de nouvelle demande
+  - Affichage des messages d'erreur de validation
+  - Selection du type de conge
+  - Dates debut/fin
+  - Motif optionnel
+
+[OK] Views/employe/profil.php
+  - Edition du prenom, nom
+  - Changement de password
+
+
+PHASE 8 : VUES RH
+
+
+[OK] Views/rh/dashboard.php
+  - Metriques en cartes
+  - Tableau des demandes en attente
+
+[OK] Views/rh/index.php
+  - Liste des demandes avec filtres
+  - Boutons Approuver/Refuser
+
+
+PHASE 9 : VUES ADMIN
+
+
+[OK] Views/admin/dashboard.php
+  - Cartes de metriques
+  - Dernieres demandes
+  - Absents aujourd'hui
+  - Soldes critiques
+
+[OK] Views/admin/employes.php
+  - Tableau des employes
+  - Boutons Editer et Desactiver/Activer
+  - Affichage des messages de succes
+
+[OK] Views/admin/create-employe.php
+  - Formulaire d'ajout d'employe
+  - Champs: prenom, nom, email, password, role, departement, date_embauche
+
+[OK] Views/admin/edit-employe.php
+  - Formulaire d'edition
+  - Password optionnel (laisser vide = pas de changement)
+  - Bouton "Mettre a jour"
+
+[OK] Views/admin/departements.php
+  - Tableau des departements
+
+[OK] Views/admin/types-conge.php
+  - Tableau des types de conge
+  - Colonne "Deductible"
+
+[OK] Views/admin/soldes.php
+  - Tableau des soldes avec annee courante
+  - Barre de progression jours utilises/attribues
+  - Colonne "Restants" avec code couleur (critique/attention/ok)
+
+
+PHASE 10 : LAYOUT ET COMPOSANTS REUTILISABLES
+
+
+[OK] Views/layout/app.php
+  - Sidebar avec navigation par role
+  - Topbar avec titre, fil d'ariane, boutons d'action
+  - Sections: page_title, breadcrumb, topbar_actions, content
+
+
+PHASE 11 : MIGRATIONS ET SEEDS
+
+
+[OK] Migrations (5 existantes)
+  - CreateDepartements
+  - CreateTypesConge
+  - CreateEmployes
+  - CreateSoldes
+  - CreateConges
+
+[OK] DatabaseSeeder.php
+  - 3 departements
+  - 3 types de conge
+  - 3 employes test (admin, rh, employe)
+  - Soldes initiaux pour employe et rh
+
+
+BUGS CORRIGES
+
+
+[OK] BUG 1: Timestamps manquants
+  - Probleme: CongeModel et SoldeModel avaient useTimestamps=true
+  - Solution: Desactiver (false) et retirer created_at/updated_at des allowedFields
+
+[OK] BUG 2: Colonne nom vs libelle
+  - Probleme: types_conge.nom n'existe pas, colonne s'appelle libelle
+  - Solution: Changer tous les SELECT 'nom' -> 'libelle' dans les joints
+
+[OK] BUG 3: Statuts incoherents
+  - Probleme: RhController ecrivait 'approuve' mais vue cherchait 'approuvee'
+  - Solution: Corriger RhController pour utiliser 'approuvee' et 'refusee'
+
+[OK] BUG 4: Cache directory non cree
+  - Probleme: CodeIgniter ne pouvait pas ecrire dans /writable/cache/
+  - Solution: Creer le repertoire avec permissions 775
+
+[OK] BUG 5: Methode first() inexistante en SQLite
+  - Probleme: SQLite3 Builder n'a pas first()
+  - Solution: Changer par get()->getRowArray()
+
+
+FONCTIONNALITES IMPLEMENTEES
+
+
+AUTHENTIFICATION:
+[OK] Login avec email/password
+[OK] Filtre par role (employe, rh, admin)
+[OK] Session gestion
+[OK] Logout
+
+EMPLOYE:
+[OK] Voir ses soldes de conge
+[OK] Creer une demande de conge
+[OK] Voir ses demandes
+[OK] Annuler une demande "en_attente"
+[OK] Modifier son profil
+[OK] Changer son mot de passe
+
+RH:
+[OK] Voir tableau de bord (metriques)
+[OK] Lister les demandes
+[OK] Filtrer par departement et statut
+[OK] Approuver une demande (avec verif solde)
+[OK] Refuser une demande
+
+ADMIN:
+[OK] Voir tableau de bord (metriques globales)
+[OK] Ajouter un employe
+[OK] Editer un employe
+[OK] Desactiver/Activer un employe
+[OK] Voir la liste des departements
+[OK] Voir la liste des types de conge
+[OK] Voir les soldes de tous les employes
+
+
+DONNEES DE TEST
+
+
+COMPTES DE CONNEXION (password: password123):
+- Admin: admin@techmada.mg (Super Admin)
+- RH: rh@techmada.mg (Jean Rakoto)
+- Employe: employe@techmada.mg (Marie Rabe)
+
+SOLDES ACTUELS (Annee 2026):
+- Marie Rabe (employe@techmada.mg):
+  * Conge annuel: 30 jours (2 approbés, 28 restants)
+  * Conge maladie: 15 jours (0 utilises, 15 restants)
+  * 1 demande approuvee (13-14 mai)
+  * 1 demande en attente (20-22 mai - maladie)
+
+- Jean Rakoto (rh@techmada.mg):
+  * Conge annuel: 30 jours (0 utilises, 30 restants)
+
+
+STRUCTURE DES FICHIERS CLES
+
+
+app/
+|- Config/
+|  |- Routes.php -> Routes avec groupes de roles
+|  |- Database.php -> SQLite3 configuration
+|- Controllers/
+|  |- AuthController.php -> Authentification
+|  |- EmployeController.php -> Employe functions
+|  |- RhController.php -> RH functions
+|  |- AdminController.php -> Admin functions
+|- Models/
+|  |- EmployeModel.php -> Employe data
+|  |- CongeModel.php -> Conge data
+|  |- SoldeModel.php -> Solde data
+|- Filters/
+|  |- AuthFilter.php -> Controle d'acces par role
+|- Views/
+|  |- layout/
+|  |  |- app.php -> Layout principal
+|  |- auth/
+|  |  |- login.php
+|  |- employe/
+|  |  |- dashboard.php
+|  |  |- index.php
+|  |  |- create.php
+|  |  |- profil.php
+|  |- rh/
+|  |  |- dashboard.php
+|  |  |- index.php
+|  |- admin/
+|      |- dashboard.php
+|      |- employes.php
+|      |- create-employe.php
+|      |- edit-employe.php
+|      |- departements.php
+|      |- types-conge.php
+|      |- soldes.php
+|- Database/
+   |- Migrations/
+   |  |- ..._CreateDepartements.php
+   |  |- ..._CreateTypesConge.php
+   |  |- ..._CreateEmployes.php
+   |  |- ..._CreateSoldes.php
+   |  |- ..._CreateConges.php
+   |- Seeds/
+      |- DatabaseSeeder.php
+
+
+TECHNOLOGIES UTILISEES
+
+
+Backend:
+- CodeIgniter 4.7.2
+- PHP 8.2.4
+- SQLite3
+
+Frontend:
+- HTML5
+- CSS3 (Inline styling)
+- Bootstrap Icons (bi icons)
+- Responsive design
+
+Database:
+- 5 tables (departements, types_conge, employes, soldes, conges)
+- Relationships avec foreign keys
+
+
+NOTES IMPORTANTES
+
+
+1. Les timestamps (created_at, updated_at) sont DESACTIVES dans les modeles
+   car la migration n'inclut pas ces colonnes.
+
+2. Les soldes se mettent a jour automatiquement quand le RH approuve une demande.
+
+3. Les employes inactifs ne peuvent plus se connecter (filtre AuthFilter).
+
+4. Une demande ne peut etre annulee que si elle est "en_attente".
+
+5. Le chevauchement de dates verifie les demandes approuvees ET en_attente.
+
+6. Les statuts des conges: 'en_attente', 'approuvee', 'refusee', 'annulee'
+
+7. Les roles: 'employe', 'rh', 'admin'
+
+8. Tous les formulaires incluent CSRF protection avec csrf_field()
+
+9. Les validations password: min 6 caracteres, hashees avec PASSWORD_DEFAULT
+
+10. La date courante du systeme est 13 mai 2026 pour les tests
+
+
+DEMARRAGE DU SERVEUR
+
+
+cd /home/njary/Documents/S4/SI\(Mr\ Rojo\)/RH-Techmada
+/opt/lampp/bin/php spark serve
+-> Acceder a http://localhost:8080
+
+
+FIN DE LA TODO LIST
+

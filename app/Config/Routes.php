@@ -33,6 +33,11 @@ $routes->group('rh', ['filter' => 'auth:rh'], function($routes) {
 $routes->group('admin', ['filter' => 'auth:admin'], function($routes) {
     $routes->get('dashboard',                    'AdminController::dashboard');
     $routes->get('employes',                     'AdminController::employes');
+    $routes->get('employes/new',                 'AdminController::createEmploye');
+    $routes->post('employes',                    'AdminController::storeEmploye');
+    $routes->get('employes/(:num)/edit',         'AdminController::editEmploye/$1');
+    $routes->post('employes/(:num)',             'AdminController::updateEmploye/$1');
+    $routes->post('employes/(:num)/deactivate',  'AdminController::deactivateEmploye/$1');
     $routes->get('departements',                 'AdminController::departements');
     $routes->get('types-conge',                  'AdminController::typesConge');
     $routes->get('soldes',                       'AdminController::soldes');

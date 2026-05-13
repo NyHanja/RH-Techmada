@@ -132,4 +132,150 @@ class AdminController extends BaseController
             'soldes' => $soldes,
         ]);
     }
+
+    public function createEmploye()
+    {
+        $db = \Config\Database::connect();
+        $departements = $db->table('departements')
+            ->orderBy('nom', 'ASC')
+            ->get()->getResultArray();
+
+        return view('admin/create-employe', [
+            'departements' => $departements,
+        ]);
+    }
+
+    public function storeEmploye()
+    {
+        $db = \Config\Database::connect();
+        
+        $nom = $this->request->getPost('nom');
+        $prenom = $this->request->getPost('prenom');
+        $email = $this->request->getPost('email');
+        $password = $this->request->getPost('password');
+        $role = $this->request->getPost('role') ?? 'employe';
+        $departement_id = $this->request->getPost('departement_id');
+        $date_embauche = $this->request->getPost('date_embauche');
+
+        // Valider
+        if (!$this->validate([
+            'nom' => 'required|string',
+            'prenom' => 'required|string',
+            'email' => 'required|valid_email|is_unique[employes.email]',
+            'password' => 'required|min_length[6]',
+            'departement_id' => 'required|numeric',
+            'date_embauche' => 'required|valid_date[Y-m-d]',
+        ])) {
+            return redirect()->back()->withInput()->with('error', 'Données invalides');
+        }
+
+        // Insérer
+        $db->table('employes')->insert([
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'email' => $email,
+            'password' => password_hash($password, PASSWORD_DEFAULT),
+            'role' => $role,
+            'departement_id' => $departement_id,
+            'date_embauche' => $date_embauche,
+            'actif' => 1,
+        ]);
+
+        return redirect()->to('/admin/employes')
+                        ->with('success', 'Employé créé avec succès');
+    }
+
+    public function editEmploye($id)
+    {
+        $db = \Config\Database::connect();
+        $employe = $db->table('employes')->where('id', $id)->get()->getRowArray();
+        
+        if (!$employe) {
+            return redirect()->to('/admin/employes')->with('error', 'Employé non trouvé');
+        }
+
+        $departements = $db->table('departements')
+            ->orderBy('nom', 'ASC')
+            ->get()->getResultArray();
+
+        return view('admin/edit-employe', [
+            'employe' => $employe,
+            'departements' => $departements,
+        ]);
+    }
+
+    public function updateEmploye($id)
+    {
+        $db = \Config\Database::connect();
+        $employe = $db->table('employes')->where('id', $id)->get()->getRowArray();
+        
+        if (!$employe) {
+            return redirect()->to('/admin/employes')->with('error', 'Employé non trouvé');
+        }
+
+        $nom = $this->request->getPost('nom');
+        $prenom = $this->request->getPost('prenom');
+        $email = $this->request->getPost('email');
+        $password = $this->request->getPost('password');
+        $role = $this->request->getPost('role');
+        $departement_id = $this->request->getPost('departement_id');
+        $date_embauche = $this->request->getPost('date_embauche');
+
+        // Valider
+        $rules = [
+            'nom' => 'required|string',
+            'prenom' => 'required|string',
+            'role' => 'required|string',
+            'departement_id' => 'required|numeric',
+            'date_embauche' => 'required|valid_date[Y-m-d]',
+        ];
+
+        // Si email changé, vérifier qu'il soit unique
+        if ($email !== $employe['email']) {
+            $rules['email'] = 'required|valid_email|is_unique[employes.email]';
+        }
+
+        // Si nouveau mot de passe
+        if ($password) {
+            $rules['password'] = 'required|min_length[6]';
+        }
+
+        if (!$this->validate($rules)) {
+            return redirect()->back()->withInput()->with('error', 'Données invalides');
+        }
+
+        $data = [
+            'nom' => $nom,
+            'prenom' => $prenom,
+            'email' => $email,
+            'role' => $role,
+            'departement_id' => $departement_id,
+            'date_embauche' => $date_embauche,
+        ];
+
+        if ($password) {
+            $data['password'] = password_hash($password, PASSWORD_DEFAULT);
+        }
+
+        $db->table('employes')->where('id', $id)->update($data);
+
+        return redirect()->to('/admin/employes')
+                        ->with('success', 'Employé mis à jour avec succès');
+    }
+
+    public function deactivateEmploye($id)
+    {
+        $db = \Config\Database::connect();
+        $employe = $db->table('employes')->where('id', $id)->get()->getRowArray();
+        
+        if (!$employe) {
+            return redirect()->to('/admin/employes')->with('error', 'Employé non trouvé');
+        }
+
+        $new_status = $employe['actif'] ? 0 : 1;
+        $db->table('employes')->where('id', $id)->update(['actif' => $new_status]);
+
+        $msg = $new_status ? 'Employé activé avec succès' : 'Employé désactivé avec succès';
+        return redirect()->to('/admin/employes')->with('success', $msg);
+    }
 }
