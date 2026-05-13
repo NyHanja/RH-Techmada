@@ -1,23 +1,5 @@
 <?= $this->extend('layout/app') ?>
 
-<?= $this->section('content') ?>
-
-<?= $this->section('page_title') ?>
-    Vue d'ensemble  // ← le titre dans la topbar
-<?= $this->endSection() ?>
-
-<?= $this->section('breadcrumb') ?>
-    Administration  // ← le fil d'ariane
-<?= $this->endSection() ?>
-
-<?= $this->section('topbar_actions') ?>
-    // ← boutons en haut à droite (optionnel)
-<?= $this->endSection() ?>
-
-<?= $this->section('content') ?>
-    // ← ton contenu principal
-<?= $this->endSection() ?>
-
 <?= $this->section('page_title') ?>Vue d'ensemble<?= $this->endSection() ?>
 
 <?= $this->section('breadcrumb') ?>Administration<?= $this->endSection() ?>
@@ -28,7 +10,8 @@
 </a>
 <?= $this->endSection() ?>
 
-<!-- Métriques -->
+<?= $this->section('content') ?>
+
 <div class="metrics">
 
     <div class="metric">
@@ -73,10 +56,8 @@
 
 </div>
 
-<!-- Contenu principal : 2 colonnes -->
 <div style="display:grid;grid-template-columns:1fr 320px;gap:1.5rem;align-items:start">
 
-    <!-- Demandes récentes -->
     <div class="data-card" style="margin:0">
         <div class="data-card-head">
             <h3>Demandes récentes</h3>
@@ -101,10 +82,8 @@
                     </tr>
                 <?php else: ?>
                     <?php foreach ($demandesRecentes as $d):
-                        // Initiales pour l'avatar
                         $initiales = strtoupper(substr($d['prenom'], 0, 1) . substr($d['nom'], 0, 1));
 
-                        // Classe CSS du badge statut
                         $statutClass = match($d['statut']) {
                             'en_attente' => 's-attente',
                             'approuvee'  => 's-approuvee',
@@ -113,7 +92,6 @@
                             default      => ''
                         };
 
-                        // Classe CSS du badge type congé
                         $typeClass = match(strtolower($d['type_conge'])) {
                             'congé annuel', 'annuel' => 't-annuel',
                             'congé maladie', 'maladie' => 't-maladie',
@@ -142,10 +120,8 @@
         </table>
     </div>
 
-    <!-- Colonne droite -->
     <div style="display:flex;flex-direction:column;gap:1rem">
 
-        <!-- Absents aujourd'hui -->
         <div class="data-card" style="margin:0">
             <div class="data-card-head">
                 <h3><i class="bi bi-person-slash" style="color:var(--muted);margin-right:5px"></i>Absents aujourd'hui</h3>
@@ -175,7 +151,6 @@
             </div>
         </div>
 
-        <!-- Alerte soldes critiques -->
         <?php if ($nbSoldesCritiques > 0): ?>
         <div class="flash flash-warn" style="margin:0">
             <i class="bi bi-exclamation-triangle-fill"></i>
@@ -186,7 +161,6 @@
         </div>
         <?php endif; ?>
 
-        <!-- Congés par type ce mois -->
         <div class="data-card" style="margin:0">
             <div class="data-card-head">
                 <h3><i class="bi bi-bar-chart" style="color:var(--muted);margin-right:5px"></i>Congés ce mois par type</h3>

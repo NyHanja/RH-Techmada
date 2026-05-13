@@ -22,9 +22,24 @@ $routes->group('employe', ['filter' => 'auth:employe'], function($routes) {
 });
 
 // RH
-$routes->group('rh', ['filter' => 'auth:rh'], function($routes) {
+$routes->group('rh',  function($routes) {
     $routes->get('dashboard',                    'RhController::dashboard');
     $routes->get('demandes',                     'RhController::index');
     $routes->post('demandes/approuver/(:num)',   'RhController::approuver/$1');
     $routes->post('demandes/refuser/(:num)',      'RhController::refuser/$1');
+});
+// Admin
+$routes->group('admin',  function($routes) {
+    $routes->get('dashboard',                   'AdminController::dashboard');
+    $routes->get('employes',                    'AdminController::employes');
+    $routes->get('employes/new',                'AdminController::employeCreate');
+    $routes->post('employes/new',               'AdminController::employeStore');
+    $routes->get('employes/edit/(:num)',        'AdminController::employeEdit/$1');
+    $routes->post('employes/edit/(:num)',       'AdminController::employeUpdate/$1');
+    $routes->post('employes/desactiver/(:num)', 'AdminController::employeDesactiver/$1');
+    $routes->get('departements',                'AdminController::departements');
+    $routes->post('departements/new',           'AdminController::departementStore');
+    $routes->get('types-conge',                 'AdminController::typesConge');
+    $routes->post('types-conge/new',            'AdminController::typeCongeStore');
+    $routes->post('soldes/init/(:num)',         'AdminController::initSolde/$1');
 });

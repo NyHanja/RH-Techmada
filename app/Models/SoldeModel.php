@@ -45,7 +45,7 @@ class SoldeModel extends Model{
 
     public function getSoldesEmploye($employe_id, $annee){
         return $this->select('soldes.*, types_conge.nom as type_conge_nom')
-                    ->join('types_conge', 'types_conge.id = soldes.type_conge_id', 'left')
+                ->join('types_conge', 'types_conge.id = soldes.type_conge_id', 'left')
                     ->where('soldes.employe_id', $employe_id)
                     ->where('soldes.annee', $annee)
                     ->findAll();
